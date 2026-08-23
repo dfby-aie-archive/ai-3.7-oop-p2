@@ -422,6 +422,38 @@ John gets a 15% corporate discount.
 
 ---
 
+**Note** When we have a group of customers of different types.
+
+```java
+Customer[] customers = {
+  new RetailCustomer("Tony", 2015, 5001, "Gold"),
+  new CorporateCustomer("John", 2010, "Acme Pte Ltd", 250000, "Sarah Lim")
+};
+
+for (Customer c : customers) {
+  c.calculateDiscount();
+}
+```
+
+Output:
+
+```bash
+Tony gets a 5% retail discount.
+John gets a 15% corporate discount.
+```
+
+Notice two things.
+
+First, the array has to be declared as `Customer[]`. We cannot declare it as `RetailCustomer[]`, because a `CorporateCustomer` would not fit. The parent type is the only type that can hold both.
+
+Second, the loop calls the same line of code for every customer, and each object still runs its own version of `calculateDiscount()`. The loop does not check the type and does not need an `if` statement. The JVM decides at runtime which version to run, based on the actual object.
+
+This is the real value of overriding. If we add a `WholesaleCustomer` class tomorrow, this loop does not change at all.
+
+> **Note:** The reference type decides what you are allowed to call. The object decides which version actually runs. So `c.calculateDiscount()` works because `calculateDiscount()` exists on `Customer`, but `c.getMembershipTier()` would not compile, because that method only exists on `RetailCustomer`.
+
+---
+
 ## Part 4: Abstraction
 
 Abstraction is when we generalize a set of characteristics and behaviors into a class.
