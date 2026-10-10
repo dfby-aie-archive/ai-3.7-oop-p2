@@ -105,6 +105,8 @@ customer.displayProfile();
 customer.calculateDiscount();
 ```
 
+> **Note:** `setJoinYear(0)` is rejected by the validation, so the field keeps its existing value of `2015`. The profile still prints the correct number of years. That is encapsulation doing its job, the object refused to go into a bad state.
+
 ---
 
 ## Part 2: Inheritance
@@ -238,6 +240,8 @@ public RetailCustomer(String name, int joinYear, int accountNumber, String membe
 }
 ```
 
+> **Note:** This first-statement rule applies only to **constructor** calls, `super()` and `this()` with parentheses. Calling a **method** with `super.someMethod()` or `this.someMethod()` has no such restriction, you can call either one, anywhere, as many times as you like.
+
 Back to our `main`, we can now pass in the `name` and `joinYear` to the `RetailCustomer` constructor.
 
 ```java
@@ -302,6 +306,8 @@ System.out.println("Company: " + corporate.getCompanyName());
 System.out.println("Contract value: " + corporate.getContractValue());
 ```
 
+> **Tip:** When a constructor takes several `String` parameters, the compiler cannot catch you passing the wrong one. Check your `super(...)` call carefully, `super(name, joinYear)` and not `super(companyName, joinYear)`.
+
 ---
 
 ## Part 3: Polymorphism
@@ -317,19 +323,26 @@ There are 2 types of polymorphism:
 
 ### Quick recap: Method Overloading
 
-Overloading is multiple methods with the same name but different parameters. The compiler decides which one to call based on the arguments. As a quick example on our existing class, we can overload `calculateDiscount()` in `RetailCustomer` to accept a promotion code.
+Overloading is multiple methods with the same name but different parameters. The compiler decides which one to call based on the arguments you pass.
+
+Let's add a simple pair of overloaded methods to the `Customer` class.
 
 ```java
-public void calculateDiscount(String promoCode) {
-  System.out.println(this.getName() + " gets an extra discount with code " + promoCode + ".");
+public void sendNotification(String message) {
+  System.out.println("Email to " + this.name + ": " + message);
+}
+
+public void sendNotification(String message, String channel) {
+  System.out.println(channel + " to " + this.name + ": " + message);
 }
 ```
 
 ```java
-retail.calculateDiscount("NEWYEAR25");
+customer.sendNotification("Your order has shipped");
+customer.sendNotification("Your order has shipped", "SMS");
 ```
 
-Same method name, different parameter list. That is all overloading is. Now on to the important one.
+Same method name, different parameter list. That is all overloading is. Because both versions live in `Customer`, every child class inherits both. Now on to the important one.
 
 ### Runtime Polymorphism: Method Overriding
 
@@ -378,6 +391,8 @@ Customer retail = new RetailCustomer("John", 2015, 5001, "Gold");
 retail.calculateDiscount(); // John gets the standard discount.
 ```
 
+> **Note:** Overriding happens automatically whenever the method name and signature match the parent. `@Override` does not cause the overriding, it is a compile-time safety check that catches typos.
+
 #### Runtime Polymorphism with `super`
 
 In some cases, we may want to call the parent class method from the child class, in addition to defining a new behavior in the child class.
@@ -393,6 +408,8 @@ public class RetailCustomer extends Customer {
   }
 }
 ```
+
+> **Note:** `super.someMethod()` can be called from **any** method in the child class, not only from inside the overriding method. It only works if the parent method has a body, if the parent method is `abstract`, there is nothing to call.
 
 ### 👨‍💻 Activity: Polymorphism **(5 minutes)**
 
@@ -420,9 +437,7 @@ Company account: Acme Pte Ltd.
 John gets a 15% corporate discount.
 ```
 
----
-
-**Note** When we have a group of customers of different types.
+### Why this matters
 
 ```java
 Customer[] customers = {
@@ -435,20 +450,7 @@ for (Customer c : customers) {
 }
 ```
 
-Output:
-
-```bash
-Tony gets a 5% retail discount.
-John gets a 15% corporate discount.
-```
-
-Notice two things.
-
-First, the array has to be declared as `Customer[]`. We cannot declare it as `RetailCustomer[]`, because a `CorporateCustomer` would not fit. The parent type is the only type that can hold both.
-
-Second, the loop calls the same line of code for every customer, and each object still runs its own version of `calculateDiscount()`. The loop does not check the type and does not need an `if` statement. The JVM decides at runtime which version to run, based on the actual object.
-
-This is the real value of overriding. If we add a `WholesaleCustomer` class tomorrow, this loop does not change at all.
+One line of code, and each object still runs its own version. No `if` statements, no type checking, and adding a `WholesaleCustomer` tomorrow would not change this loop at all.
 
 > **Note:** The reference type decides what you are allowed to call. The object decides which version actually runs. So `c.calculateDiscount()` works because `calculateDiscount()` exists on `Customer`, but `c.getMembershipTier()` would not compile, because that method only exists on `RetailCustomer`.
 
@@ -550,17 +552,15 @@ phone.track();
 phone.startTracking(); // uses default method from Trackable interface
 ```
 
-Notice that `MobilePhone` can call `startTracking()` without implementing it. It inherits the default implementation from the interface. A class can also **override** a default method with its own implementation.
+Notice that `MobilePhone` can call `startTracking()` without implementing it. It inherits the default implementation from the interface.
 
 Unlike inheritance, a class can implement multiple interfaces. We will use that in the activity below.
 
 ### When to use which
 
-Use an **interface** when you want to define a contract that any class can implement, regardless of its position in the class hierarchy, or when a class needs multiple behaviours (a class can implement many interfaces but extend only one class).
+Need shared fields or shared code across closely related classes, use an **abstract class**. Need a contract that unrelated classes can all honour, or a class that needs several behaviours at once, use an **interface**.
 
-Use an **abstract class** when you want to provide a common base implementation and shared fields for a group of closely related classes.
-
-### 👨‍💻 Activity: Abstraction **(20 minutes)**
+### 👨‍💻 Activity: Abstraction **(15 minutes)**
 
 In this activity, you will practice working with abstract classes and interfaces.
 
@@ -576,7 +576,7 @@ public abstract class Vehicle {
 }
 ```
 
-There are 4 interfaces:
+There are 3 interfaces:
 
 ```java
 interface Drivable {
@@ -592,11 +592,6 @@ interface FuelTank {
   void fill();
   double getFuelLevel();
 }
-
-interface BatteryPack {
-  void charge();
-  double getCharge();
-}
 ```
 
 All vehicles are `Drivable` and `Trackable`. A `Car` should also implement `FuelTank`.
@@ -609,22 +604,7 @@ car.track();
 car.drive();
 car.stop();
 car.fill();
-car.getFuelLevel();
-```
-
-### Optional challenge
-
-Create an `ElectricCar` class that extends `Vehicle` and implements `Drivable`, `Trackable` and `BatteryPack`.
-
-Test code:
-
-```java
-ElectricCar electricCar = new ElectricCar("Tesla");
-electricCar.track();
-electricCar.drive();
-electricCar.stop();
-electricCar.charge();
-electricCar.getCharge();
+System.out.println("Fuel level: " + car.getFuelLevel());
 ```
 
 ---
@@ -680,6 +660,8 @@ public class Car extends Vehicle implements FuelTank {
   }
 }
 ```
+
+`Car` does not inherit anything from `Radio`. It simply holds a `Radio` object and forwards the call to it. That forwarding is called delegation.
 
 Notice that this same `Car` class now uses inheritance (`extends Vehicle`), an interface (`implements FuelTank`), **and** composition (`Radio` field) all at once. These are not competing techniques. A single class can combine all three.
 
